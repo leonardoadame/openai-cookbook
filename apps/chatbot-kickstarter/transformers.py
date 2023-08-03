@@ -11,10 +11,9 @@ def get_col_average_from_list_of_lists(list_of_lists):
     """Return the average of each column in a list of lists."""
     if len(list_of_lists) == 1:
         return list_of_lists[0]
-    else:
-        list_of_lists_array = array(list_of_lists)
-        average_embedding = average(list_of_lists_array, axis=0)
-        return average_embedding.tolist()
+    list_of_lists_array = array(list_of_lists)
+    average_embedding = average(list_of_lists_array, axis=0)
+    return average_embedding.tolist()
 
 # Create embeddings for a text using a tokenizer and an OpenAI engine
 
@@ -81,16 +80,16 @@ def handle_file_string(file, tokenizer, redis_conn, text_embedding_field, index_
 
     # Clean up the file string by replacing newlines, double spaces, and semi-colons
     clean_file_body_string = file_body_string.replace("  ", " ").replace("\n", "; ").replace(';', ' ')
-    
+
     # Add the filename to the text to embed
-    text_to_embed = "Filename is: {}; {}".format(filename, clean_file_body_string)
+    text_to_embed = f"Filename is: {filename}; {clean_file_body_string}"
 
     try:
         # Create embeddings for the text
         text_embeddings, average_embedding = create_embeddings_for_text(text_to_embed, tokenizer)
         # print("[handle_file_string] Created embedding for {}".format(filename))
     except Exception as e:
-        print("[handle_file_string] Error creating embedding: {}".format(e))
+        print(f"[handle_file_string] Error creating embedding: {e}")
 
     # Get the vectors array of triples: file_chunk_id, embedding, metadata for each embedding
     # Metadata is a dict with keys: filename, file_chunk_index
@@ -121,8 +120,7 @@ class BatchGenerator:
         if splits <= 1:
             yield df
         else:
-            for chunk in np.array_split(df, splits):
-                yield chunk
+            yield from np.array_split(df, splits)
 
     # Determines how many chunks DataFrame contains
     def splits_num(self, elements: int) -> int:

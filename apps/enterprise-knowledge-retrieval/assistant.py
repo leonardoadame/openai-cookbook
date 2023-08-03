@@ -27,10 +27,10 @@ def answer_user_question(query):
 
     results.to_csv("results.csv")
 
-    search_content = ""
-    for x, y in results.head(3).iterrows():
-        search_content += y["title"] + "\n" + y["result"] + "\n\n"
-
+    search_content = "".join(
+        y["title"] + "\n" + y["result"] + "\n\n"
+        for x, y in results.head(3).iterrows()
+    )
     retrieval_prepped = RETRIEVAL_PROMPT.format(
         SEARCH_QUERY_HERE=query, SEARCH_CONTENT_HERE=search_content
     )
@@ -68,10 +68,10 @@ def answer_question_hyde(query):
 
     results.to_csv("results.csv")
 
-    search_content = ""
-    for x, y in results.head(3).iterrows():
-        search_content += y["title"] + "\n" + y["result"] + "\n\n"
-
+    search_content = "".join(
+        y["title"] + "\n" + y["result"] + "\n\n"
+        for x, y in results.head(3).iterrows()
+    )
     retrieval_prepped = RETRIEVAL_PROMPT.replace("SEARCH_QUERY_HERE", query).replace(
         "SEARCH_CONTENT_HERE", search_content
     )
@@ -126,8 +126,8 @@ class CustomOutputParser(AgentOutputParser):
         match = re.search(regex, llm_output, re.DOTALL)
         if not match:
             raise ValueError(f"Could not parse LLM output: `{llm_output}`")
-        action = match.group(1).strip()
-        action_input = match.group(2)
+        action = match[1].strip()
+        action_input = match[2]
         # Return the action and action input
         return AgentAction(
             tool=action, tool_input=action_input.strip(" ").strip('"'), log=llm_output
@@ -162,11 +162,9 @@ def initiate_agent(tools):
         allowed_tools=tool_names,
     )
 
-    agent_executor = AgentExecutor.from_agent_and_tools(
+    return AgentExecutor.from_agent_and_tools(
         agent=agent, tools=tools, verbose=True, memory=memory
     )
-
-    return agent_executor
 
 
 def ask_gpt(query):
@@ -175,7 +173,7 @@ def ask_gpt(query):
         messages=[
             {
                 "role": "user",
-                "content": "Please answer my question.\nQuestion: {}".format(query),
+                "content": f"Please answer my question.\nQuestion: {query}",
             }
         ],
         temperature=0,
