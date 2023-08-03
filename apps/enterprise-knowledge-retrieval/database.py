@@ -17,10 +17,9 @@ from config import (
 
 
 def get_redis_connection():
-    redis_client = r(
+    return r(
         host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB, decode_responses=False
     )
-    return redis_client
 
 
 # Make query to Redis
@@ -44,10 +43,7 @@ def query_redis(redis_conn, query, index_name, top_k=5):
     )
     params_dict = {"vec_param": embedded_query}
 
-    # Execute the query
-    results = redis_conn.ft(index_name).search(q, query_params=params_dict)
-
-    return results
+    return redis_conn.ft(index_name).search(q, query_params=params_dict)
 
 
 # Get mapped documents from Redis results

@@ -11,8 +11,7 @@ from config import EMBEDDINGS_MODEL, PREFIX, VECTOR_FIELD_NAME
 # Get a Redis connection
 def get_redis_connection(host='localhost',port='6379',db=0):
     
-    r = Redis(host=host, port=port, db=db,decode_responses=False)
-    return r
+    return Redis(host=host, port=port, db=db,decode_responses=False)
 
 # Create a Redis index to hold our data
 def create_hnsw_index (redis_conn,vector_field_name,vector_dimensions=1536, distance_metric='COSINE'):
@@ -53,29 +52,22 @@ def query_redis(redis_conn,query,index_name, top_k=2):
                                             )["data"][0]['embedding'], dtype=np.float32).tobytes()
 
     #prepare the query
-    q = Query(f'*=>[KNN {top_k} @{VECTOR_FIELD_NAME} $vec_param AS vector_score]').sort_by('vector_score').paging(0,top_k).return_fields('vector_score','filename','text_chunk','text_chunk_index').dialect(2) 
+    q = Query(f'*=>[KNN {top_k} @{VECTOR_FIELD_NAME} $vec_param AS vector_score]').sort_by('vector_score').paging(0,top_k).return_fields('vector_score','filename','text_chunk','text_chunk_index').dialect(2)
     params_dict = {"vec_param": embedded_query}
 
-    
-    #Execute the query
-    results = redis_conn.ft(index_name).search(q, query_params = params_dict)
-    
-    return results
+
+    return redis_conn.ft(index_name).search(q, query_params = params_dict)
 
 # Get mapped documents from Weaviate results
 def get_redis_results(redis_conn,query,index_name):
     
     # Get most relevant documents from Redis
     query_result = query_redis(redis_conn,query,index_name)
-    
-    # Extract info into a list
-    query_result_list = []
-    for i, result in enumerate(query_result.docs):
-        result_order = i
-        text = result.text_chunk
-        score = result.vector_score
-        query_result_list.append((result_order,text,score))
-        
+
+    query_result_list = [
+        (i, result.text_chunk, result.vector_score)
+        for i, result in enumerate(query_result.docs)
+    ]
     # Display result as a DataFrame for ease of us
     result_df = pd.DataFrame(query_result_list)
     result_df.columns = ['id','result','certainty']

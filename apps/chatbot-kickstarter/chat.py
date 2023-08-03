@@ -48,23 +48,18 @@ if 'past' not in st.session_state:
     st.session_state['past'] = []
 
 def query(question):
-    response = st.session_state['chat'].ask_assistant(question)
-    return response
+    return st.session_state['chat'].ask_assistant(question)
 
-prompt = st.text_input(f"What do you want to know: ", key="input")
+prompt = st.text_input("What do you want to know: ", key="input")
 
 if st.button('Submit', key='generationSubmit'):
 
+    messages = []
     # Initialization
     if 'chat' not in st.session_state:
         st.session_state['chat'] = RetrievalAssistant()
-        messages = []
         system_message = Message('system',system_prompt)
         messages.append(system_message.message())
-    else:
-        messages = []
-
-
     user_message = Message('user',prompt)
     messages.append(user_message.message())
 
@@ -80,4 +75,4 @@ if st.session_state['generated']:
 
     for i in range(len(st.session_state['generated'])-1, -1, -1):
         message(st.session_state["generated"][i], key=str(i))
-        message(st.session_state['past'][i], is_user=True, key=str(i) + '_user')
+        message(st.session_state['past'][i], is_user=True, key=f'{str(i)}_user')

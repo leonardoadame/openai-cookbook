@@ -38,8 +38,7 @@ from tenacity import (
 @st.cache_data
 def embedding_from_string(input: str, model: str) -> list:
     response = openai.Embedding.create(input=input, model=model)
-    embedding = response["data"][0]["embedding"]
-    return embedding
+    return response["data"][0]["embedding"]
 
 
 # plot distance matrix
